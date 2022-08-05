@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="greeting_msg">Hello World!</string>
+    <string name="input_hint">Enter Your Name</string>
+    <string name="developer">Creator: Abhilash Gupta</string>
+    <string name="view_offer_btn">View Offers</string>
+</resources>
