@@ -1,10 +1,12 @@
 package com.example.studentregister
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studentregister.db.Student
 import com.example.studentregister.db.StudentDatabase
@@ -19,6 +21,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: StudentViewModel
 
+    private lateinit var adapter: StudentRecyclerViewAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -27,6 +31,8 @@ class MainActivity : AppCompatActivity() {
         etEmail = findViewById(R.id.etEmail)
         btnSave = findViewById(R.id.btnSave)
         btnClear = findViewById(R.id.btnClear)
+
+        rvStudent = findViewById(R.id.rvStudent)
 
         val dao = StudentDatabase.getInstance(application).studentDao()
         val factory = StudentViewModelFactory(dao)
@@ -40,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         btnClear.setOnClickListener {
             clearInput()
         }
+
+        initRecyclerView()
 
     }
 
@@ -55,5 +63,22 @@ class MainActivity : AppCompatActivity() {
     private fun clearInput() {
         etName.setText("")
         etEmail.setText("")
+    }
+
+    private fun initRecyclerView() {
+        rvStudent.layoutManager = LinearLayoutManager(this)
+        adapter = StudentRecyclerViewAdapter()
+        rvStudent.adapter = adapter
+
+        displayStudentList()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun displayStudentList() {
+        viewModel.student.observe(this) {
+            adapter.setList(it)
+            adapter.notifyDataSetChanged()
+        }
+
     }
 }
