@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Student Register</string>
+    <string name="student_s_name_hint">Student\'s Name</string>
+    <string name="student_s_email_hint">Student\'s Email</string>
 </resources>
