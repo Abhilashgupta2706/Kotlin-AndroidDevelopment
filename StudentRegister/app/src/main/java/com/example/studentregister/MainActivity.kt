@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +25,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: StudentRecyclerViewAdapter
 
+    private lateinit var selectedStudent: Student
+    private var lisItemClicked: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -39,11 +44,18 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, factory).get(StudentViewModel::class.java)
 
         btnSave.setOnClickListener {
-            saveStudentData()
+            if (lisItemClicked) {
+                updateStudentData()
+            } else {
+                saveStudentData()
+            }
             clearInput()
         }
 
         btnClear.setOnClickListener {
+            if (lisItemClicked) {
+                deleteStudentData()
+            }
             clearInput()
         }
 
@@ -57,7 +69,19 @@ class MainActivity : AppCompatActivity() {
 
         val student = Student(0, name, email)
         viewModel.insertStudent(student)
+    }
 
+    @SuppressLint("SetTextI18n")
+    private fun updateStudentData() {
+        val name = etName.text.toString()
+        val email = etEmail.text.toString()
+
+        val student = Student(selectedStudent.id, name, email)
+        viewModel.updateStudent(student)
+
+        btnSave.text = "SAVE"
+        btnClear.text = "CLEAR"
+        lisItemClicked = false
     }
 
     private fun clearInput() {
@@ -65,9 +89,24 @@ class MainActivity : AppCompatActivity() {
         etEmail.setText("")
     }
 
+    @SuppressLint("SetTextI18n")
+    private fun deleteStudentData() {
+        val name = etName.text.toString()
+        val email = etEmail.text.toString()
+
+        val student = Student(selectedStudent.id, name, email)
+        viewModel.deleteStudent(student)
+
+        btnSave.text = "SAVE"
+        btnClear.text = "CLEAR"
+        lisItemClicked = false
+    }
+
     private fun initRecyclerView() {
         rvStudent.layoutManager = LinearLayoutManager(this)
-        adapter = StudentRecyclerViewAdapter()
+        adapter = StudentRecyclerViewAdapter { selectedItem: Student ->
+            listItemClick(selectedItem)
+        }
         rvStudent.adapter = adapter
 
         displayStudentList()
@@ -79,6 +118,24 @@ class MainActivity : AppCompatActivity() {
             adapter.setList(it)
             adapter.notifyDataSetChanged()
         }
+
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun listItemClick(student: Student) {
+//        Toast.makeText(
+//            this, "Clicked ${student.name}",
+//            Toast.LENGTH_SHORT
+//        ).show()
+
+        selectedStudent = student
+        btnSave.text = "UPDATE"
+        btnClear.text = "DELETE"
+        btnClear.setBackgroundColor(android.graphics.Color.RED)
+        lisItemClicked = true
+
+        etName.setText(selectedStudent.name)
+        etEmail.setText(selectedStudent.email)
 
     }
 }

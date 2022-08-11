@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:text="TextView"
-            android:textSize="34sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
@@ -28,6 +28,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:text="TextView"
-            android:textSize="24sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
