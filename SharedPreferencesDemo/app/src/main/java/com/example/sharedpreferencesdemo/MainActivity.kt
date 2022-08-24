@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        super.onResume()
+         super.onResume()
         Log.i("MyTAG", "MainActivity: Success")
 
         val name = sf.getString("sf_name", null)
