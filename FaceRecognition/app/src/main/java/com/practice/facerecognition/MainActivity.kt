@@ -50,34 +50,36 @@ import kotlin.math.sqrt
 
 
 class MainActivity : AppCompatActivity() {
+
+    // User data class to extract the data from JSON String
     data class User(val username: String, val password: String)
 
     private var detector: FaceDetector? = null
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var previewView: PreviewView
-    private lateinit var face_preview: ImageView
+    private lateinit var ivFace: ImageView
     private lateinit var tfLite: Interpreter
-    private lateinit var reco_name: TextView
-    private lateinit var preview_info: TextView
-    private lateinit var textAbove_preview: TextView
+    private lateinit var tvRecognisedName: TextView
+    private lateinit var tvPreviewInfo: TextView
+    private lateinit var tvHeading: TextView
     private lateinit var recognize: Button
     private lateinit var cameraSwitch: Button
-    private lateinit var actions: Button
-    private lateinit var add_face: ImageButton
+    private lateinit var moreOptions: Button
+    private lateinit var ibtnAdd: ImageButton
     private lateinit var cameraSelector: CameraSelector
     private var developerMode = false
     private var distance = 1.0f
     private var start = true
     private var flipX = false
     private var context: Context = this@MainActivity
-    private var cam_face = CameraSelector.LENS_FACING_BACK //Default Back Camera
+    private var camFace = CameraSelector.LENS_FACING_BACK //Default Back Camera
     private lateinit var intValues: IntArray
     private var inputSize = 112 //Input size for model
     private var isModelQuantized = false
     private lateinit var embeedings: Array<FloatArray>
-    private var IMAGE_MEAN = 128.0f
-    private var IMAGE_STD = 128.0f
-    private var OUTPUT_SIZE = 192 //Output size of model
+    private var imageMean = 128.0f
+    private var imageSTD = 128.0f
+    private var outputSize = 192 //Output size of model
     private lateinit var cameraProvider: ProcessCameraProvider
     private var modelFile = "mobile_face_net.tflite" //model name
     private var registered = HashMap<String?, SimilarityClassifier.Recognition>() //saved Faces
@@ -88,33 +90,38 @@ class MainActivity : AppCompatActivity() {
         registered = readFromSP() //Load saved faces from memory when app starts
         setContentView(R.layout.activity_main)
 
-        face_preview = findViewById(R.id.ivFace)
-        reco_name = findViewById(R.id.tv1)
-        preview_info = findViewById(R.id.tv2)
-        textAbove_preview = findViewById(R.id.tvHeading)
-        add_face = findViewById(R.id.ibtnAdd)
-        add_face.visibility = INVISIBLE
+        ivFace = findViewById(R.id.ivFace)
+        tvRecognisedName = findViewById(R.id.tvRecognisedName)
+        tvPreviewInfo = findViewById(R.id.tvPreviewInfo)
+        tvHeading = findViewById(R.id.tvHeading)
+        ibtnAdd = findViewById(R.id.ibtnAdd)
+        ibtnAdd.visibility = INVISIBLE
         val sharedPref = getSharedPreferences("Distance", MODE_PRIVATE)
         distance = sharedPref.getFloat("distance", 1.00f)
-        face_preview.visibility = INVISIBLE
+        ivFace.visibility = INVISIBLE
         recognize = findViewById(R.id.btnAddFace)
         cameraSwitch = findViewById(R.id.btnCameraSwitch)
-        actions = findViewById(R.id.btnMoreActions)
+        moreOptions = findViewById(R.id.btnMoreActions)
 
-        cam_face = CameraSelector.LENS_FACING_FRONT
+        // Making the camera to FRONT cam by default
+        camFace = CameraSelector.LENS_FACING_FRONT
         flipX = true
 
+        // Getting all the registered faces from SP on Create activity
         registered.putAll(readFromSP())
 
-        textAbove_preview.text = "Recognized Face:"
+        tvHeading.text = "Recognized Face:"
+        //Checking camera permission if not send requesty
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), MY_CAMERA_REQUEST_CODE)
         }
-        actions.setOnClickListener {
+
+        // More more options button
+        moreOptions.setOnClickListener {
             val builder = AlertDialog.Builder(context)
             builder.setTitle("Select Action:")
 
-            // add a checkbox list
+            // List of options after clicking on more Opyions BTN
             val names = arrayOf(
                 "View Recognition List",
                 "Update Recognition List",
@@ -128,11 +135,11 @@ class MainActivity : AppCompatActivity() {
 
             builder.setItems(names) { _, which ->
                 when (which) {
-                    0 -> displayNameListView()
-                    1 -> updateNameListview()
+                    0 -> displayUsersListView()
+                    1 -> updateUsersList()
 //                    2 -> insertToSP(registered, 0) //mode: 0:save all, 1:clear all, 2:update all
 //                    3 -> registered.putAll(readFromSP())
-                    2 -> clearNameList()
+                    2 -> clearUsersList()
                     3 -> loadPhoto()
 //                    6 -> testHyperParameter()
 //                    7 -> developerMode()
@@ -149,38 +156,38 @@ class MainActivity : AppCompatActivity() {
         //On-screen switch to toggle between Cameras.
         cameraSwitch.visibility = INVISIBLE
         cameraSwitch.setOnClickListener {
-            if (cam_face == CameraSelector.LENS_FACING_BACK) {
-                cam_face = CameraSelector.LENS_FACING_FRONT
+            if (camFace == CameraSelector.LENS_FACING_BACK) {
+                camFace = CameraSelector.LENS_FACING_FRONT
                 flipX = true
             } else {
-                cam_face = CameraSelector.LENS_FACING_BACK
+                camFace = CameraSelector.LENS_FACING_BACK
                 flipX = false
             }
             cameraProvider.unbindAll()
             cameraBind()
         }
 
-        add_face.setOnClickListener {
+        ibtnAdd.setOnClickListener {
             addFace()
         }
 
         recognize.setOnClickListener {
             if (recognize.text.toString() == "Recognize") {
                 start = true
-                textAbove_preview.text = "Recognized Face:"
+                tvHeading.text = "Recognized Face:"
                 recognize.text = "Add Face"
-                add_face.visibility = INVISIBLE
-                reco_name.visibility = View.VISIBLE
-                face_preview.visibility = INVISIBLE
-                preview_info.text = ""
-                //preview_info.setVisibility(View.INVISIBLE);
+                ibtnAdd.visibility = INVISIBLE
+                tvRecognisedName.visibility = View.VISIBLE
+                ivFace.visibility = INVISIBLE
+                tvPreviewInfo.text = ""
+                //tvPreviewInfo.setVisibility(View.INVISIBLE);
             } else {
-                textAbove_preview.text = "Face Preview: "
+                tvHeading.text = "Face Preview: "
                 recognize.text = "Recognize"
-                add_face.visibility = View.VISIBLE
-                reco_name.visibility = INVISIBLE
-                face_preview.visibility = View.VISIBLE
-                preview_info.text =
+                ibtnAdd.visibility = View.VISIBLE
+                tvRecognisedName.visibility = INVISIBLE
+                ivFace.visibility = View.VISIBLE
+                tvPreviewInfo.text =
                     "1.Bring Face in view of Camera.\n\n2.Your Face preview will appear here.\n\n3.Click Add button to save face."
             }
         }
@@ -207,8 +214,8 @@ class MainActivity : AppCompatActivity() {
         val names = arrayOf("Maximum Nearest Neighbour Distance")
         builder.setItems(names) { _, which ->
             when (which) {
-                0 -> //                        Toast.makeText(context, "Clicked", Toast.LENGTH_SHORT).show();
-                    hyperparameters()
+                0 -> // Toast.makeText(context, "Clicked", Toast.LENGTH_SHORT).show();
+                    hyperParameters()
             }
         }
         builder.setPositiveButton("OK") { _, _ -> }
@@ -235,7 +242,7 @@ class MainActivity : AppCompatActivity() {
             val builder = AlertDialog.Builder(context)
             builder.setTitle("Enter Details")
 
-            // Set up the input
+            // Setting up the inputs
             val username = EditText(context)
             username.hint = "Username"
             username.inputType = InputType.TYPE_CLASS_TEXT
@@ -243,18 +250,20 @@ class MainActivity : AppCompatActivity() {
             password.hint = "Password"
             password.inputType = InputType.TYPE_CLASS_TEXT
 
+            // Making the layout
             val layout = LinearLayout(this)
             layout.orientation = LinearLayout.VERTICAL
             layout.addView(username)
             layout.addView(password)
 
+            // Setting padding
             layout.setPadding(60, 60, 60, 60)
 
+            // Setting the view
             builder.setView(layout)
-            // Set up the buttons
-            builder.setPositiveButton("ADD") { _, _ ->
 
-                //Create and Initialize new object with Face embeddings and Name.
+            builder.setPositiveButton("ADD") { _, _ ->
+                // Create and Initialize new object with Face embeddings, Username & Password.
                 val result = SimilarityClassifier.Recognition(
                     "0", "", -1f
                 )
@@ -263,7 +272,10 @@ class MainActivity : AppCompatActivity() {
                     "username" to username.text.toString(),
                     "password" to password.text.toString()
                 )
+
+                // Converting JSON to String for storing in SP
                 val jsonString = Gson().toJson(jsonObject)
+                // Storing data in SP
                 registered[jsonString] = result
                 start = true
                 insertToSP(registered, 0)
@@ -276,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun clearNameList() {
+    private fun clearUsersList() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Do you want to delete all Recognitions?")
         builder.setPositiveButton("Delete All") { _, _ ->
@@ -289,7 +301,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun updateNameListview() {
+    private fun updateUsersList() {
         val builder = AlertDialog.Builder(context)
         if (registered.isEmpty()) {
             builder.setTitle("No Faces Added!!")
@@ -297,13 +309,13 @@ class MainActivity : AppCompatActivity() {
         } else {
             builder.setTitle("Select Recognition to delete:")
 
-            // add a checkbox list
+            // Adding a checkbox list
             val names = arrayOfNulls<String>(registered.size)
             val checkedItems = BooleanArray(registered.size)
             var i = 0
             for ((key) in registered) {
+                // Converting JSONString to User Object
                 val user = Gson().fromJson(key, User::class.java)
-                //System.out.println("NAME"+entry.getKey());
                 names[i] = user.username
                 checkedItems[i] = false
                 i += 1
@@ -334,7 +346,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun hyperparameters() {
+    private fun hyperParameters() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Euclidean Distance")
         builder.setMessage("0.00 -> Perfect Match\n1.00 -> Default\nTurn On Developer Mode to find optimum value\n\nCurrent Value:")
@@ -346,7 +358,7 @@ class MainActivity : AppCompatActivity() {
         distance = sharedPref.getFloat("distance", 1.00f)
         input.setText(distance.toString())
         // Set up the buttons
-        builder.setPositiveButton("Update") { _, _ -> //Toast.makeText(context, input.getText().toString(), Toast.LENGTH_SHORT).show();
+        builder.setPositiveButton("Update") { _, _ ->
             distance = input.text.toString().toFloat()
             val sharedPref = getSharedPreferences("Distance", MODE_PRIVATE)
             val editor = sharedPref.edit()
@@ -357,17 +369,16 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    private fun displayNameListView() {
+    private fun displayUsersListView() {
         val builder = AlertDialog.Builder(context)
-        // System.out.println("Registered"+registered);
-        if (registered.isEmpty()) builder.setTitle("No Faces Added!!") else builder.setTitle("Recognitions:")
+        if (registered.isEmpty()) builder.setTitle("No Users Added!!") else builder.setTitle("Recognitions:")
 
-        // add a checkbox list
+        // Adding a checkbox list
         val names = arrayOfNulls<String>(registered.size)
         val checkedItems = BooleanArray(registered.size)
         var i = 0
         for ((key) in registered) {
-            //System.out.println("NAME"+entry.getKey());
+            // Converting JSONString to User Object
             val user = Gson().fromJson(key, User::class.java)
             names[i] = user.username
             checkedItems[i] = false
@@ -376,11 +387,12 @@ class MainActivity : AppCompatActivity() {
         builder.setItems(names, null)
         builder.setPositiveButton("OK") { _, _ -> }
 
-        // create and show the alert dialog
+        // Creating the alert dialog
         val dialog = builder.create()
         dialog.show()
     }
 
+    // Camera permission check
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -406,7 +418,7 @@ class MainActivity : AppCompatActivity() {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
-    //Bind camera and preview view
+    //Bind camera and Preview view
     private fun cameraBind() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         previewView = findViewById(R.id.cameraView)
@@ -427,7 +439,7 @@ class MainActivity : AppCompatActivity() {
         val preview = Preview.Builder()
             .build()
         cameraSelector = CameraSelector.Builder()
-            .requireLensFacing(cam_face)
+            .requireLensFacing(camFace)
             .build()
         preview.setSurfaceProvider(previewView.surfaceProvider)
         val imageAnalysis = ImageAnalysis.Builder()
@@ -437,7 +449,7 @@ class MainActivity : AppCompatActivity() {
         val executor: Executor = Executors.newSingleThreadExecutor()
         imageAnalysis.setAnalyzer(executor) { imageProxy ->
             try {
-                Thread.sleep(0) //Camera preview refreshed every 10 millisec(adjust as required)
+                Thread.sleep(0) //Camera preview refreshed every 10 millisecond(adjust as required)
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
@@ -474,8 +486,8 @@ class MainActivity : AppCompatActivity() {
                         if (start) recognizeImage(scaled) //Send scaled bitmap to create face embeddings.
                         //                                                    System.out.println(boundingBox);
                     } else {
-                        if (registered.isEmpty()) reco_name.text =
-                            "Add Face" else reco_name.text = "No Face Detected!"
+                        if (registered.isEmpty()) tvRecognisedName.text =
+                            "Add Face" else tvRecognisedName.text = "No Face Detected!"
                     }
                 }
                 .addOnFailureListener {
@@ -497,7 +509,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     fun recognizeImage(bitmap: Bitmap) {
         // set Face to Preview
-        face_preview.setImageBitmap(bitmap)
+        ivFace.setImageBitmap(bitmap)
 
         //Create ByteBuffer to store normalized image
         val imgData = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
@@ -516,9 +528,9 @@ class MainActivity : AppCompatActivity() {
                     imgData.put((pixelValue shr 8 and 0xFF).toByte())
                     imgData.put((pixelValue and 0xFF).toByte())
                 } else { // Float model
-                    imgData.putFloat(((pixelValue shr 16 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                    imgData.putFloat(((pixelValue shr 8 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                    imgData.putFloat(((pixelValue and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
+                    imgData.putFloat(((pixelValue shr 16 and 0xFF) - imageMean) / imageSTD)
+                    imgData.putFloat(((pixelValue shr 8 and 0xFF) - imageMean) / imageSTD)
+                    imgData.putFloat(((pixelValue and 0xFF) - imageMean) / imageSTD)
                 }
             }
         }
@@ -526,10 +538,10 @@ class MainActivity : AppCompatActivity() {
         val inputArray = arrayOf<Any>(imgData)
         val outputMap: MutableMap<Int, Any> = HashMap()
         embeedings =
-            Array(1) { FloatArray(OUTPUT_SIZE) } //output of model will be stored in this variable
+            Array(1) { FloatArray(outputSize) } //output of model will be stored in this variable
         outputMap[0] = embeedings
         tfLite.runForMultipleInputsOutputs(inputArray, outputMap) //Run model
-        var distance_local = MAX_VALUE
+        var distanceLocal = MAX_VALUE
         val id = "0"
         val label = "?"
 
@@ -539,33 +551,35 @@ class MainActivity : AppCompatActivity() {
             if (nearest[0] != null) {
                 val name = nearest[0]!!.first //get name and distance of closest matching face
                 // label = name;
-                distance_local = nearest[0]!!.second
+                distanceLocal = nearest[0]!!.second
                 if (developerMode) {
-                    if (distance_local < distance) //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
-                        reco_name.text = "Nearest: $name\nDist: " + String.format(
+                    if (distanceLocal < distance) //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
+                        tvRecognisedName.text = "Nearest: $name\nDist: " + String.format(
                             "%.3f",
-                            distance_local
+                            distanceLocal
                         ) + "\n2nd Nearest: " + nearest[1]!!.first + "\nDist: " + String.format(
                             "%.3f",
                             nearest[1]!!.second
-                        ) else reco_name.text = """Unknown Dist:""".trimIndent() + String.format(
-                        "%.3f",
-                        distance_local
-                    ) + "\nNearest: " + name + "\nDist: " + String.format(
-                        "%.3f",
-                        distance_local
-                    ) + "\n2nd Nearest: " + nearest[1]!!.first + "\nDist: `" + String.format(
-                        "%.3f",
-                        nearest[1]!!.second
-                    )
+                        ) else tvRecognisedName.text =
+                        """Unknown Dist:""".trimIndent() + String.format(
+                            "%.3f",
+                            distanceLocal
+                        ) + "\nNearest: " + name + "\nDist: " + String.format(
+                            "%.3f",
+                            distanceLocal
+                        ) + "\n2nd Nearest: " + nearest[1]!!.first + "\nDist: `" + String.format(
+                            "%.3f",
+                            nearest[1]!!.second
+                        )
 
                 } else {
                     //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
+                    // Converting JSONString to User Object
                     val user = Gson().fromJson(name, User::class.java)
-                    if (distance_local < distance) {
-                        reco_name.text = user.username
+                    if (distanceLocal < distance) {
+                        tvRecognisedName.text = user.username
                     } else {
-                        reco_name.text = "Unknown"
+                        tvRecognisedName.text = "Unknown"
                     }
                 }
             }
@@ -574,9 +588,9 @@ class MainActivity : AppCompatActivity() {
 
     //Compare Faces by distance between face embeddings
     private fun findNearest(emb: FloatArray): List<Pair<String?, Float>?> {
-        val neighbour_list: MutableList<Pair<String?, Float>?> = ArrayList()
+        val neighbourList: MutableList<Pair<String?, Float>?> = ArrayList()
         var ret: Pair<String?, Float>? = null //to get closest match
-        var prev_ret: Pair<String?, Float>? = null //to get second closest match
+        var prevRet: Pair<String?, Float>? = null //to get second closest match
         for ((name, value) in registered) {
             val knownEmb = (value.extra as Array<FloatArray>)[0]
             var distance = 0f
@@ -586,14 +600,14 @@ class MainActivity : AppCompatActivity() {
             }
             distance = sqrt(distance.toDouble()).toFloat()
             if (ret == null || distance < ret.second) {
-                prev_ret = ret
+                prevRet = ret
                 ret = Pair(name, distance)
             }
         }
-        if (prev_ret == null) prev_ret = ret
-        neighbour_list.add(ret)
-        neighbour_list.add(prev_ret)
-        return neighbour_list
+        if (prevRet == null) prevRet = ret
+        neighbourList.add(ret)
+        neighbourList.add(prevRet)
+        return neighbourList
     }
 
     private fun getResizedBitmap(bm: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
@@ -631,7 +645,6 @@ class MainActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("HashMap", MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("map", jsonString)
-        //System.out.println("Input josn"+jsonString.toString());
         editor.apply()
         Toast.makeText(context, "Recognitions Saved", Toast.LENGTH_SHORT).show()
     }
@@ -649,7 +662,7 @@ class MainActivity : AppCompatActivity() {
         //During type conversion and save/load procedure,format changes(eg float converted to double).
         //So embeddings need to be extracted from it in required format(eg.double to float).
         for ((_, value) in retrievedMap) {
-            val output = Array(1) { FloatArray(OUTPUT_SIZE) }
+            val output = Array(1) { FloatArray(outputSize) }
             var arrayList = value.extra as ArrayList<*>
             arrayList = arrayList[0] as ArrayList<*>
             for (counter in arrayList.indices) {
@@ -682,14 +695,14 @@ class MainActivity : AppCompatActivity() {
             if (requestCode == SELECT_PICTURE) {
                 val selectedImageUri = data!!.data
                 try {
-                    val impphoto = InputImage.fromBitmap(getBitmapFromUri(selectedImageUri), 0)
-                    detector!!.process(impphoto).addOnSuccessListener { faces ->
+                    val importPicture = InputImage.fromBitmap(getBitmapFromUri(selectedImageUri), 0)
+                    detector!!.process(importPicture).addOnSuccessListener { faces ->
                         if (faces.size != 0) {
                             recognize.text = "Recognize"
-                            add_face.visibility = View.VISIBLE
-                            reco_name.visibility = INVISIBLE
-                            face_preview.visibility = View.VISIBLE
-                            preview_info.text =
+                            ibtnAdd.visibility = View.VISIBLE
+                            tvRecognisedName.visibility = INVISIBLE
+                            ivFace.visibility = View.VISIBLE
+                            tvPreviewInfo.text =
                                 "1.Bring Face in view of Camera.\n\n2.Your Face preview will appear here.\n\n3.Click Add button to save face."
                             val face = faces[0]
                             //                                System.out.println(face);
@@ -704,11 +717,11 @@ class MainActivity : AppCompatActivity() {
                             }
                             val frameBmp1 = rotateBitmap(frame_bmp, 0, flipX, false)
 
-                            //face_preview.setImageBitmap(frame_bmp1);
+                            //ivFace.setImageBitmap(frame_bmp1);
                             val boundingBox = RectF(face.boundingBox)
                             val croppedFace = getCropBitmapByCPU(frameBmp1, boundingBox)
                             val scaled = getResizedBitmap(croppedFace, 112, 112)
-                            // face_preview.setImageBitmap(scaled);
+                            // ivFace.setImageBitmap(scaled);
                             recognizeImage(scaled)
                             addFace()
                             //                                System.out.println(boundingBox);
@@ -722,7 +735,7 @@ class MainActivity : AppCompatActivity() {
                         start = true
                         Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
                     }
-                    face_preview.setImageBitmap(getBitmapFromUri(selectedImageUri))
+                    ivFace.setImageBitmap(getBitmapFromUri(selectedImageUri))
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
