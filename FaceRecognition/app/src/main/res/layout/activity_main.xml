@@ -1,148 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/container"
-        android:layout_width="297dp"
-        android:layout_height="279dp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.060000002">
-
-        <Button
-            android:id="@+id/btnCameraSwitch"
-            android:layout_width="68dp"
-            android:layout_height="65dp"
-            android:layout_marginStart="229dp"
-            android:layout_marginEnd="229dp"
-            android:background="@drawable/cam"
-            android:backgroundTint="@color/teal_200"
-            android:elevation="1dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:layout_conversion_absoluteHeight="63dp"
-            tools:layout_conversion_absoluteWidth="62dp" />
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.camera.view.PreviewView
-            android:id="@+id/cameraView"
+            android:id="@+id/cvFR"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="450dp">
 
         </androidx.camera.view.PreviewView>
-    </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/container">
+        <ImageView
+            android:id="@+id/ivFRFacePreview"
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:background="#2C7E57C2"
+            android:contentDescription="Face Preview"
+            android:elevation="1dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/container"
+            app:layout_constraintVertical_bias="0.435"
+            tools:srcCompat="@android:drawable/screen_background_light_transparent" />
 
-        <Button
-            android:id="@+id/btnAddFace"
-            android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/tvFRRecognised"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/round_bg"
-            android:rotation="0"
-            android:rotationX="0"
-            android:rotationY="0"
-            android:text="Add New Face"
+            android:fontFamily="serif-monospace"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Text View"
             android:textAlignment="center"
-            android:visibility="visible"
-            tools:visibility="visible" />
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <!--            <ImageButton-->
+            <!--                android:id="@+id/btnFRRecognise"-->
+            <!--                android:layout_width="101dp"-->
+            <!--                android:layout_height="100dp"-->
+            <!--                android:layout_margin="10dp"-->
+            <!--                android:layout_weight="1"-->
+            <!--                android:background="@drawable/face_id_icon"-->
+            <!--                android:backgroundTint="#00FFFFFF"-->
+            <!--                android:elevation="10dp"-->
+            <!--                android:scaleType="fitCenter"-->
+            <!--                android:scaleX=".6"-->
+            <!--                android:scaleY=".6"-->
+            <!--                tools:srcCompat="@drawable/face_id_icon"-->
+            <!--                tools:visibility="gone" />-->
+
+            <ImageButton
+                android:id="@+id/btnFRSetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/configurations_icon"
+                android:backgroundTint="#00FFFFFF"
+                android:contentDescription="More Options"
+                android:elevation="10dp"
+                android:scaleType="fitCenter"
+                android:scaleX=".6"
+                android:scaleY=".6"
+                app:srcCompat="@drawable/configurations_icon" />
+
+            <ImageButton
+                android:id="@+id/btnFRAddFace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/add_face_icon"
+                android:backgroundTint="#00FFFFFF"
+                android:contentDescription="Add Face"
+                android:elevation="10dp"
+                android:scaleType="fitCenter"
+                android:scaleX=".6"
+                android:scaleY=".6"
+                app:srcCompat="@drawable/add_face_icon" />
+
+            <ImageButton
+                android:id="@+id/btnFRSwitchCamera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/switch_camera_icon"
+                android:backgroundTint="#00FFFFFF"
+                android:contentDescription="Switch Camera"
+                android:elevation="10dp"
+                android:scaleType="fitCenter"
+                android:scaleX=".6"
+                android:scaleY=".6"
+                app:srcCompat="@drawable/switch_camera_icon" />
+
+            <ImageButton
+                android:id="@+id/btnFRSaveFace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/save_face_icon"
+                android:backgroundTint="#00FFFFFF"
+                android:contentDescription="Save Face"
+                android:elevation="10dp"
+                android:scaleType="fitCenter"
+                android:scaleX=".6"
+                android:scaleY=".6"
+                app:srcCompat="@drawable/save_face_icon" />
+
+        </LinearLayout>
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/ibtnAdd"
-        android:contentDescription="Add Details"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="164dp"
-        android:layout_marginBottom="168dp"
-        android:elevation="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/ivFace"
-        app:layout_constraintStart_toStartOf="@+id/ivFace"
-        app:srcCompat="@android:drawable/ic_input_add" />
-
-    <ImageView
-        android:id="@+id/ivFace"
-        android:contentDescription="Face Preview"
-        android:layout_width="203dp"
-        android:layout_height="200dp"
-        android:background="#2C7E57C2"
-        android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/container"
-        app:layout_constraintVertical_bias="0.435"
-        tools:srcCompat="@android:drawable/screen_background_light_transparent" />
-
-    <TextView
-        android:id="@+id/tvRecognisedName"
-        android:layout_width="164dp"
-        android:layout_height="wrap_content"
-        android:hint="Add Face"
-        android:textAlignment="center"
-        android:textColor="@color/purple_500"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/ivFace"
-        app:layout_constraintEnd_toEndOf="@+id/ivFace"
-        app:layout_constraintHorizontal_bias="0.487"
-        app:layout_constraintStart_toStartOf="@+id/ivFace"
-        app:layout_constraintTop_toTopOf="@+id/ivFace"
-        app:layout_constraintVertical_bias="0.479" />
-
-    <TextView
-        android:id="@+id/tvPreviewInfo"
-        android:layout_width="164dp"
-        android:layout_height="180dp"
-        android:textColor="@color/black"
-        android:textSize="15sp"
-        app:layout_constraintBottom_toBottomOf="@+id/ivFace"
-        app:layout_constraintEnd_toEndOf="@+id/ivFace"
-        app:layout_constraintHorizontal_bias="0.487"
-        app:layout_constraintStart_toStartOf="@+id/ivFace"
-        app:layout_constraintTop_toTopOf="@+id/ivFace"
-        app:layout_constraintVertical_bias="0.914" />
-
-    <TextView
-        android:id="@+id/tvHeading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#000000"
-        android:textSize="15sp"
-        app:layout_constraintBottom_toTopOf="@+id/ivFace"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/btnMoreActions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/round_bg"
-        android:text="More Options"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivFace"
-        app:layout_constraintVertical_bias="0.25" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

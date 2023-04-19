@@ -13,8 +13,9 @@ import android.os.Bundle
 import android.text.InputType
 import android.util.Pair
 import android.util.Size
-import android.view.View
+import android.view.View.GONE
 import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +23,6 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
@@ -32,6 +32,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.practice.facerecognition.databinding.ActivityMainBinding
 import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
@@ -50,22 +51,14 @@ import kotlin.math.sqrt
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var vb: ActivityMainBinding
 
     // User data class to extract the data from JSON String
     data class User(val username: String, val password: String)
 
     private var detector: FaceDetector? = null
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    private lateinit var previewView: PreviewView
-    private lateinit var ivFace: ImageView
     private lateinit var tfLite: Interpreter
-    private lateinit var tvRecognisedName: TextView
-    private lateinit var tvPreviewInfo: TextView
-    private lateinit var tvHeading: TextView
-    private lateinit var recognize: Button
-    private lateinit var cameraSwitch: Button
-    private lateinit var moreOptions: Button
-    private lateinit var ibtnAdd: ImageButton
     private lateinit var cameraSelector: CameraSelector
     private var developerMode = false
     private var distance = 1.0f
@@ -90,38 +83,29 @@ class MainActivity : AppCompatActivity() {
         registered = readFromSP() //Load saved faces from memory when app starts
         setContentView(R.layout.activity_main)
 
-        ivFace = findViewById(R.id.ivFace)
-        tvRecognisedName = findViewById(R.id.tvRecognisedName)
-        tvPreviewInfo = findViewById(R.id.tvPreviewInfo)
-        tvHeading = findViewById(R.id.tvHeading)
-        ibtnAdd = findViewById(R.id.ibtnAdd)
-        ibtnAdd.visibility = INVISIBLE
+        // Init View Binding
+        vb = ActivityMainBinding.inflate(layoutInflater)
+        val view = vb.root
+        setContentView(view)
+
         val sharedPref = getSharedPreferences("Distance", MODE_PRIVATE)
         distance = sharedPref.getFloat("distance", 1.00f)
-        ivFace.visibility = INVISIBLE
-        recognize = findViewById(R.id.btnAddFace)
-        cameraSwitch = findViewById(R.id.btnCameraSwitch)
-        moreOptions = findViewById(R.id.btnMoreActions)
-
-        // Making the camera to FRONT cam by default
-        camFace = CameraSelector.LENS_FACING_FRONT
-        flipX = true
+        vb.ivFRFacePreview.visibility = INVISIBLE
 
         // Getting all the registered faces from SP on Create activity
         registered.putAll(readFromSP())
 
-        tvHeading.text = "Recognized Face:"
-        //Checking camera permission if not send requesty
+        //Checking camera permission if not send request
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), MY_CAMERA_REQUEST_CODE)
         }
 
         // More more options button
-        moreOptions.setOnClickListener {
+        vb.btnFRSetting.setOnClickListener {
             val builder = AlertDialog.Builder(context)
             builder.setTitle("Select Action:")
 
-            // List of options after clicking on more Opyions BTN
+            // List of options after clicking on more Options BTN
             val names = arrayOf(
                 "View Recognition List",
                 "Update Recognition List",
@@ -154,8 +138,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //On-screen switch to toggle between Cameras.
-        cameraSwitch.visibility = INVISIBLE
-        cameraSwitch.setOnClickListener {
+        vb.btnFRSwitchCamera.setOnClickListener {
             if (camFace == CameraSelector.LENS_FACING_BACK) {
                 camFace = CameraSelector.LENS_FACING_FRONT
                 flipX = true
@@ -167,28 +150,22 @@ class MainActivity : AppCompatActivity() {
             cameraBind()
         }
 
-        ibtnAdd.setOnClickListener {
+        vb.btnFRSaveFace.setOnClickListener {
             addFace()
         }
 
-        recognize.setOnClickListener {
-            if (recognize.text.toString() == "Recognize") {
+        vb.btnFRAddFace.setOnClickListener {
+            if (vb.btnFRAddFace.contentDescription == "Recognize") {
                 start = true
-                tvHeading.text = "Recognized Face:"
-                recognize.text = "Add Face"
-                ibtnAdd.visibility = INVISIBLE
-                tvRecognisedName.visibility = View.VISIBLE
-                ivFace.visibility = INVISIBLE
-                tvPreviewInfo.text = ""
-                //tvPreviewInfo.setVisibility(View.INVISIBLE);
+                vb.btnFRAddFace.contentDescription = "Add Face"
+                vb.btnFRAddFace.setImageResource(R.drawable.add_face_icon);
+                vb.ivFRFacePreview.visibility = GONE
+                vb.tvFRRecognised.visibility = VISIBLE
             } else {
-                tvHeading.text = "Face Preview: "
-                recognize.text = "Recognize"
-                ibtnAdd.visibility = View.VISIBLE
-                tvRecognisedName.visibility = INVISIBLE
-                ivFace.visibility = View.VISIBLE
-                tvPreviewInfo.text =
-                    "1.Bring Face in view of Camera.\n\n2.Your Face preview will appear here.\n\n3.Click Add button to save face."
+                vb.btnFRAddFace.contentDescription = "Recognize"
+                vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon);
+                vb.ivFRFacePreview.visibility = VISIBLE
+                vb.tvFRRecognised.visibility = GONE
             }
         }
 
@@ -421,7 +398,6 @@ class MainActivity : AppCompatActivity() {
     //Bind camera and Preview view
     private fun cameraBind() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        previewView = findViewById(R.id.cameraView)
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
@@ -441,7 +417,7 @@ class MainActivity : AppCompatActivity() {
         cameraSelector = CameraSelector.Builder()
             .requireLensFacing(camFace)
             .build()
-        preview.setSurfaceProvider(previewView.surfaceProvider)
+        preview.setSurfaceProvider(vb.cvFR.surfaceProvider)
         val imageAnalysis = ImageAnalysis.Builder()
             .setTargetResolution(Size(640, 480))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST) //Latest frame is shown
@@ -484,10 +460,9 @@ class MainActivity : AppCompatActivity() {
                         //Scale the acquired Face to 112*112 which is required input for model
                         val scaled = getResizedBitmap(croppedFace, 112, 112)
                         if (start) recognizeImage(scaled) //Send scaled bitmap to create face embeddings.
-                        //                                                    System.out.println(boundingBox);
                     } else {
-                        if (registered.isEmpty()) tvRecognisedName.text =
-                            "Add Face" else tvRecognisedName.text = "No Face Detected!"
+                        vb.tvFRRecognised.text =
+                            if (registered.isEmpty()) "Add Face" else "No Face Detected!"
                     }
                 }
                 .addOnFailureListener {
@@ -509,7 +484,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     fun recognizeImage(bitmap: Bitmap) {
         // set Face to Preview
-        ivFace.setImageBitmap(bitmap)
+        vb.ivFRFacePreview.setImageBitmap(bitmap)
 
         //Create ByteBuffer to store normalized image
         val imgData = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
@@ -554,13 +529,13 @@ class MainActivity : AppCompatActivity() {
                 distanceLocal = nearest[0]!!.second
                 if (developerMode) {
                     if (distanceLocal < distance) //If distance between Closest found face is more than 1.000 ,then output UNKNOWN face.
-                        tvRecognisedName.text = "Nearest: $name\nDist: " + String.format(
+                        vb.tvFRRecognised.text = "Nearest: $name\nDist: " + String.format(
                             "%.3f",
                             distanceLocal
                         ) + "\n2nd Nearest: " + nearest[1]!!.first + "\nDist: " + String.format(
                             "%.3f",
                             nearest[1]!!.second
-                        ) else tvRecognisedName.text =
+                        ) else vb.tvFRRecognised.text =
                         """Unknown Dist:""".trimIndent() + String.format(
                             "%.3f",
                             distanceLocal
@@ -577,9 +552,10 @@ class MainActivity : AppCompatActivity() {
                     // Converting JSONString to User Object
                     val user = Gson().fromJson(name, User::class.java)
                     if (distanceLocal < distance) {
-                        tvRecognisedName.text = user.username
+                        vb.tvFRRecognised.text =
+                            "Username: ${user.username}\nPassword: ${user.password}"
                     } else {
-                        tvRecognisedName.text = "Unknown"
+                        vb.tvFRRecognised.text = "Unknown User "
                     }
                 }
             }
@@ -669,10 +645,7 @@ class MainActivity : AppCompatActivity() {
                 output[0][counter] = (arrayList[counter] as Double).toFloat()
             }
             value.extra = output
-
-            //System.out.println("Entry output "+entry.getKey()+" "+entry.getValue().getExtra() );
         }
-        //        System.out.println("OUTPUT"+ Arrays.deepToString(outut));
         Toast.makeText(context, "Recognitions Loaded", Toast.LENGTH_SHORT).show()
         return retrievedMap
     }
@@ -698,11 +671,11 @@ class MainActivity : AppCompatActivity() {
                     val importPicture = InputImage.fromBitmap(getBitmapFromUri(selectedImageUri), 0)
                     detector!!.process(importPicture).addOnSuccessListener { faces ->
                         if (faces.size != 0) {
-                            recognize.text = "Recognize"
-                            ibtnAdd.visibility = View.VISIBLE
-                            tvRecognisedName.visibility = INVISIBLE
-                            ivFace.visibility = View.VISIBLE
-                            tvPreviewInfo.text =
+                            vb.btnFRAddFace.contentDescription = "Recognize"
+                            vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon);
+                            vb.tvFRRecognised.visibility = GONE
+                            vb.ivFRFacePreview.visibility = VISIBLE
+                            vb.tvFRRecognised.text =
                                 "1.Bring Face in view of Camera.\n\n2.Your Face preview will appear here.\n\n3.Click Add button to save face."
                             val face = faces[0]
                             //                                System.out.println(face);
@@ -735,7 +708,7 @@ class MainActivity : AppCompatActivity() {
                         start = true
                         Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
                     }
-                    ivFace.setImageBitmap(getBitmapFromUri(selectedImageUri))
+                    vb.ivFRFacePreview.setImageBitmap(getBitmapFromUri(selectedImageUri))
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
@@ -763,18 +736,18 @@ class MainActivity : AppCompatActivity() {
                 cropRectF.height().toInt(),
                 Bitmap.Config.ARGB_8888
             )
-            val cavas = Canvas(resultBitmap)
+            val canvas = Canvas(resultBitmap)
 
             // draw background
             val paint = Paint(Paint.FILTER_BITMAP_FLAG)
             paint.color = Color.WHITE
-            cavas.drawRect(
+            canvas.drawRect(
                 RectF(0f, 0f, cropRectF.width(), cropRectF.height()),
                 paint
             )
             val matrix = Matrix()
             matrix.postTranslate(-cropRectF.left, -cropRectF.top)
-            cavas.drawBitmap(source!!, matrix, paint)
+            canvas.drawBitmap(source!!, matrix, paint)
             if (!source.isRecycled) {
                 source.recycle()
             }
