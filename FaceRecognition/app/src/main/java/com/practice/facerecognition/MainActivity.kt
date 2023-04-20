@@ -288,9 +288,11 @@ class MainActivity : AppCompatActivity() {
 
             // Adding a checkbox list
             val names = arrayOfNulls<String>(registered.size)
+            val users = arrayOfNulls<String>(registered.size)
             val checkedItems = BooleanArray(registered.size)
             var i = 0
             for ((key) in registered) {
+                users[i] = key
                 // Converting JSONString to User Object
                 val user = Gson().fromJson(key, User::class.java)
                 names[i] = user.username
@@ -308,8 +310,7 @@ class MainActivity : AppCompatActivity() {
                 for (i in checkedItems.indices) {
                     //System.out.println("status:"+checkedItems[i]);
                     if (checkedItems[i]) {
-//                                Toast.makeText(MainActivity.this, names[i], Toast.LENGTH_SHORT).show();
-                        registered.remove(names[i])
+                        registered.remove(users[i])
                     }
                 }
                 insertToSP(registered, 2) //mode: 0:save all, 1:clear all, 2:update all
