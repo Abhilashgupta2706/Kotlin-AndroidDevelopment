@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">FragmentsNavMenu</string>
+
+    <string name="open_nav">Open Nav bar</string>
+    <string name="close_nav">Close Nav bar</string>
+
+    <string name="hello_dashboard_fragment">Hello DashBoard Fragment</string>
+    <string name="hello_message_fragment">Hello Message Fragment</string>
+    <string name="hello_share_fragment">Hello Share Fragment</string>
+    <string name="hello_rate_us_fragment">Hello Rate Us Fragment</string>
 </resources>
