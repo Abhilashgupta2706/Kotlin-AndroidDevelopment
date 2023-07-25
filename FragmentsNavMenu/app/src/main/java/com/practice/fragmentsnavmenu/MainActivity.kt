@@ -8,6 +8,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import com.practice.fragmentsnavmenu.databinding.ActivityMainBinding
+import com.practice.fragmentsnavmenu.fragments.DashboardFragment
+import com.practice.fragmentsnavmenu.fragments.MessageFragment
+import com.practice.fragmentsnavmenu.fragments.RateUsFragment
+import com.practice.fragmentsnavmenu.fragments.ShareFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var vb: ActivityMainBinding
