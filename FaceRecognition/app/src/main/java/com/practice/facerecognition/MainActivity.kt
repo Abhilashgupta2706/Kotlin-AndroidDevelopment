@@ -158,12 +158,12 @@ class MainActivity : AppCompatActivity() {
             if (vb.btnFRAddFace.contentDescription == "Recognize") {
                 start = true
                 vb.btnFRAddFace.contentDescription = "Add Face"
-                vb.btnFRAddFace.setImageResource(R.drawable.add_face_icon);
+                vb.btnFRAddFace.setImageResource(R.drawable.add_face_icon)
                 vb.ivFRFacePreview.visibility = GONE
                 vb.tvFRRecognised.visibility = VISIBLE
             } else {
                 vb.btnFRAddFace.contentDescription = "Recognize"
-                vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon);
+                vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon)
                 vb.ivFRFacePreview.visibility = VISIBLE
                 vb.tvFRRecognised.visibility = GONE
             }
@@ -673,7 +673,7 @@ class MainActivity : AppCompatActivity() {
                     detector!!.process(importPicture).addOnSuccessListener { faces ->
                         if (faces.size != 0) {
                             vb.btnFRAddFace.contentDescription = "Recognize"
-                            vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon);
+                            vb.btnFRAddFace.setImageResource(R.drawable.face_id_icon)
                             vb.tvFRRecognised.visibility = GONE
                             vb.ivFRFacePreview.visibility = VISIBLE
                             vb.tvFRRecognised.text =
