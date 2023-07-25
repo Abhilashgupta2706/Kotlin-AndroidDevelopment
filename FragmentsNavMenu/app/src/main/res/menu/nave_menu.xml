@@ -3,50 +3,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
+    <item
+        android:id="@+id/menuDashboard"
+        android:icon="@drawable/nav_dashboard"
+        android:title="Dashboard" />
 
-        <item
-            android:id="@+id/navDashboard"
-            android:icon="@drawable/nav_dashboard"
-            android:title="Dashboard" />
+    <item
+        android:id="@+id/menuMessage"
+        android:icon="@drawable/nav_message"
+        android:title="Message" />
 
-        <item
-            android:id="@+id/navServiceReqGeneration"
-            android:icon="@drawable/nav_message"
-            android:title="Message" />
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/menuShare"
+                android:icon="@drawable/nav_share"
+                android:title="Share" />
+            <item
+                android:id="@+id/menuRateUs"
+                android:icon="@drawable/nav_rate_us"
+                android:title="Rate Us" />
+        </menu>
+    </item>
 
-    </group>
+    <item android:title="Profile">
+        <menu>
+            <item
+                android:id="@+id/menuLogout"
+                android:icon="@drawable/nav_logout"
+                android:title="Logout" />
 
-
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/navCommunicate"
-            android:title="Communicate">
-            <menu>
-                <item
-                    android:id="@+id/navShare"
-                    android:icon="@drawable/nav_share"
-                    android:title="Share" />
-                <item
-                    android:id="@+id/navRateUs"
-                    android:icon="@drawable/nav_rate_us"
-                    android:title="Rate Us" />
-            </menu>
-        </item>
-    </group>
-
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/navSettingsGroup"
-            android:title="Profile">
-            <menu>
-                <item
-                    android:id="@+id/navLogout"
-                    android:icon="@drawable/nav_logout"
-                    android:title="Logout" />
-            </menu>
-        </item>
-    </group>
-
-
+        </menu>
+    </item>
 </menu>

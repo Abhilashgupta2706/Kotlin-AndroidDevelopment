@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="110dp"
     android:background="@drawable/background"
-    android:gravity="bottom"
     android:orientation="vertical"
     android:padding="10dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
